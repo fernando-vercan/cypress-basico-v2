@@ -4,6 +4,8 @@
 /// <reference types="Cypress" />
 
 describe("Central de Atendimento ao Cliente TAT", function () {
+  const THREE_SECONDS_IN_MS = 3000;
+
   //Visita o site primeiro, depois executa o teste
   beforeEach(function () {
     cy.visit("./src/index.html");
@@ -14,6 +16,9 @@ describe("Central de Atendimento ao Cliente TAT", function () {
   });
 
   it("preenche os campos obrigatórios e envia o formulário", function () {
+    //congela o tempo do navegador
+    cy.clock();
+
     cy.get("#firstName").type("John");
 
     cy.get("#lastName").type("Doe");
@@ -25,9 +30,15 @@ describe("Central de Atendimento ao Cliente TAT", function () {
     cy.contains("button", "Enviar").click();
 
     cy.get(".success").should("be.visible");
+
+    cy.tick(THREE_SECONDS_IN_MS);
+
+    cy.get(".success").should("not.be.visible");
   });
 
   it("exibe mensagem de erro ao submeter o formulário com um email com formatação inválida", function () {
+    cy.clock();
+
     cy.get("#firstName").type("John");
 
     cy.get("#lastName").type("Doe");
@@ -39,6 +50,10 @@ describe("Central de Atendimento ao Cliente TAT", function () {
     cy.contains("button", "Enviar").click();
 
     cy.get(".error").should("be.visible");
+
+    cy.tick(THREE_SECONDS_IN_MS);
+
+    cy.get(".error").should("not.be.visible");
   });
 
   it("verifica se o campo telefone está vazio", function () {
@@ -46,6 +61,8 @@ describe("Central de Atendimento ao Cliente TAT", function () {
   });
 
   it("exibe mensagem de erro quando o telefone se torna obrigatório mas não é preenchido antes do envio do formulário", function () {
+    cy.clock();
+
     cy.get("#firstName").type("John");
 
     cy.get("#lastName").type("Doe");
@@ -59,6 +76,10 @@ describe("Central de Atendimento ao Cliente TAT", function () {
     cy.contains("button", "Enviar").click();
 
     cy.get(".error").should("be.visible");
+
+    cy.tick(THREE_SECONDS_IN_MS);
+
+    cy.get(".error").should("not.be.visible");
   });
 
   it("preenche e limpa os campos nome, sobrenome, email e telefone", function () {
@@ -88,15 +109,27 @@ describe("Central de Atendimento ao Cliente TAT", function () {
   });
 
   it("exibe mensagem de erro ao submeter o formulário sem preencher os campos obrigatórios", function () {
+    cy.clock();
+
     cy.contains("button", "Enviar").click();
 
     cy.get(".error").should("be.visible");
+
+    cy.tick(THREE_SECONDS_IN_MS);
+
+    cy.get(".error").should("not.be.visible");
   });
 
   it("envia o formuário com sucesso usando um comando customizado", function () {
+    cy.clock();
+
     cy.fillMandatoryFieldsAndSubmit();
 
     cy.get(".success").should("be.visible");
+
+    cy.tick(THREE_SECONDS_IN_MS);
+
+    cy.get(".success").should("not.be.visible");
   });
 
   it("seleciona um produto (YouTube) por seu valor (value)", function () {
@@ -172,4 +205,31 @@ describe("Central de Atendimento ao Cliente TAT", function () {
     cy.contains("Talking About Testing").should("be.visible");
   });
 
+  it("exibe e esconde as mensagens de sucesso e erro usando o .invoke", function () {
+    cy.get(".success")
+      .should("not.be.visible")
+      .invoke("show")
+      .should("be.visible")
+      .and("contain", "Mensagem enviada com sucesso.")
+      .invoke("hide")
+      .should("not.be.visible");
+    cy.get(".error")
+      .should("not.be.visible")
+      .invoke("show")
+      .should("be.visible")
+      .and("contain", "Valide os campos obrigatórios!")
+      .invoke("hide")
+      .should("not.be.visible");
+  });
+
+  it("faz uma requisição HTTP", function () {
+    cy.request("faz uma requisição HTTP").should(function name(response) {
+      const { status, statusText, body } = response;
+      expect(status).to.equal(200);
+
+      expect(statusText).to.equal("OK");
+
+      expect(body).to.include("Cypress");
+    });
+  });
 });
